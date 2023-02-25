@@ -303,14 +303,6 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
         case "help":
             msg.Text = "از دکمه های زیر استفاده کنید"
 			msg.ReplyMarkup = numericKeyboard
-        case "restart":
-		err := s.xrayService.RestartXray(true)
-		if err != nil {
-			msg.Text = fmt.Sprintln("⚠ راه اندازی مجدد سرویس XRAY ناموفق بود, err: ", err)
-		} else {
-			msg.Text = "✅ سرویس XRAY با موفقیت راه اندازی مجدد شد"
-		}
-		msg.ReplyMarkup = numericKeyboard
 	case "github":
 			msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
 			msg.ReplyMarkup = numericKeyboard
