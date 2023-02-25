@@ -145,34 +145,34 @@ func (j *StatsNotifyJob) UserLoginNotify(username string, ip string, time string
 
 var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("وضعیت کانفیگ", "get_usage")
+        tgbotapi.NewInlineKeyboardButtonData("وضعیت کانفیگ", "get_usage"),
     ),
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("وضعیت ربات", "status")
+        tgbotapi.NewInlineKeyboardButtonData("وضعیت ربات", "status"),
     ),
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("حذف کانفیگ", "get_delete")
+        tgbotapi.NewInlineKeyboardButtonData("حذف کانفیگ", "get_delete"),
     ),
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("غیرفعال کردن کانفیگ", "get_disable")
+        tgbotapi.NewInlineKeyboardButtonData("غیرفعال کردن کانفیگ", "get_disable"),
     ),
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("فعال کردن کانفیگ", "get_enable")
+        tgbotapi.NewInlineKeyboardButtonData("فعال کردن کانفیگ", "get_enable"),
     ),
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("ریست ترافیک کانفیگ", "get_clear")
+        tgbotapi.NewInlineKeyboardButtonData("ریست ترافیک کانفیگ", "get_clear"),
     ),
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData(" ریست ترافیک کل", "clearall")
+        tgbotapi.NewInlineKeyboardButtonData(" ریست ترافیک کل", "clearall"),
     ),
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("ریستارت XRAY", "restart")
+        tgbotapi.NewInlineKeyboardButtonData("ریستارت XRAY", "restart"),
     ),
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("لینک گیت هاب", "github")
+        tgbotapi.NewInlineKeyboardButtonData("لینک گیت هاب", "github"),
     ),
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("راهنمایی", "help")
+        tgbotapi.NewInlineKeyboardButtonData("راهنمایی", "help"),
     ),
 )
 
