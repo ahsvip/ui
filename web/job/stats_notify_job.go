@@ -2,13 +2,17 @@ package job
 
 import (
 	"fmt"
-	"net"
+	"log"
 	"os"
+	"runtime"
+	"strconv"
 	"time"
 	"x-ui/logger"
 	"x-ui/util/common"
-	"x-ui/web/service"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
+	"github.com/shirou/gopsutil/host"
+	"github.com/shirou/gopsutil/load"
 )
 
 type LoginStatus byte
