@@ -134,7 +134,7 @@ func (j *StatsNotifyJob) UserLoginNotify(username string, ip string, time string
 		return
 	}
 	if status == LoginSuccess {
-		msg = fmt.Sprintf("با موفقیت به پنل وارد شدید \r\ سرور : %s\r\n", name)
+		msg = fmt.Sprintf("با موفقیت به پنل وارد شدید \r\n سرور : %s\r\n", name)
 	} else if status == LoginFail {
 		msg = fmt.Sprintf("ورود به پنل ناموفق بود \r\n سرور : %s\r\n", name)
 	}
