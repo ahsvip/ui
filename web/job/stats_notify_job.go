@@ -1,12 +1,10 @@
 package job
 
 import (
-	//"log"
 	"runtime"
 	"fmt"
 	"net"
 	"os"
-	//"os/exec"
 	"strconv"
 	"time"
 	"x-ui/logger"
@@ -146,18 +144,36 @@ func (j *StatsNotifyJob) UserLoginNotify(username string, ip string, time string
 
 
 var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-    tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("وضعیت کانفیگ", "get_usage"),
-        tgbotapi.NewInlineKeyboardButtonData("وضعیت ربات", "status"),
-        tgbotapi.NewInlineKeyboardButtonData("راهنمایی", "help"),
-        tgbotapi.NewInlineKeyboardButtonData("لینک گیت هاب", "github"),
-        tgbotapi.NewInlineKeyboardButtonData("ریستارت XRAY", "restart"),
-        tgbotapi.NewInlineKeyboardButtonData("حذف کانفیگ", "get_delete"),
-        tgbotapi.NewInlineKeyboardButtonData("غیرفعال کردن کانفیگ", "get_disable"),
-        tgbotapi.NewInlineKeyboardButtonData("فعال کردن کانفیگ", "get_enable"),
-        tgbotapi.NewInlineKeyboardButtonData("ریست ترافیک کانفیگ", "get_clear"),
-        tgbotapi.NewInlineKeyboardButtonData(" ریست ترافیک کل", "clearall"),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("وضعیت کانفیگ", "get_usage")
     ),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("وضعیت ربات", "status")
+    ),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("حذف کانفیگ", "get_delete")
+    ),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("غیرفعال کردن کانفیگ", "get_disable")
+    ),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("فعال کردن کانفیگ", "get_enable")
+    ),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("ریست ترافیک کانفیگ", "get_clear")
+    ),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData(" ریست ترافیک کل", "clearall")
+    ),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("ریستارت XRAY", "restart")
+    ),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("لینک گیت هاب", "github")
+    ),
+	tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("راهنمایی", "help")
+    )
 )
 
 func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
@@ -305,26 +321,29 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 		}
 		msg.ReplyMarkup = numericKeyboard
         case "help":
-            msg.Text = "از دکمه های زیر استفاده کنید"
-			msg.ReplyMarkup = numericKeyboard
+		msg.Text = "از دکمه های زیر استفاده کنید"
+		msg.ReplyMarkup = numericKeyboard
 	case "github":
-			msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
-			msg.ReplyMarkup = numericKeyboard
+		msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
+		msg.ReplyMarkup = numericKeyboard
 	case "status":
-			msg.Text = j.GetsystemStatus()
-			msg.ReplyMarkup = numericKeyboard
+		msg.Text = j.GetsystemStatus()
+		msg.ReplyMarkup = numericKeyboard
 	case "start":
-			msg.Text = `
-			😁 سلام!
-			💖به استفاده از ربات تلگرام پنل xXx-UI خوش آمدید! لطفا /help را ارسال کنید تا ببینید چه کاری می توانم انجام دهم`
+		msg.Text = `
+		😁 سلام
+		💖به ربات تلگرام پنل xXx-UI خوش آمدید
+		👦🏻 Author   : MrCenTury
+		📍 Github   : https://github.com/MrCenTury
+		📞 Telegram : @hcentury`
 		msg.ReplyMarkup = numericKeyboard
 	case "usage":
-            msg.Text = j.getClientUsage(update.Message.CommandArguments())
+		msg.Text = j.getClientUsage(update.Message.CommandArguments())
 	
 	case "author":msg.Text = `
-		👦🏻 Author  : MrCenTury
-		📍 Github   : https://github.com/MrCenTury
-		📞 Telegram: @hcentury`
+	👦🏻 Author   : MrCenTury
+	📍 Github   : https://github.com/MrCenTury
+	📞 Telegram : @hcentury`
         default:
             msg.Text = "⭐/help⭐"
 		msg.ReplyMarkup = numericKeyboard
