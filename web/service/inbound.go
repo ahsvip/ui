@@ -170,6 +170,12 @@ func (s *InboundService) DelInbound(id int) error {
 	db := database.GetDB()
 	return db.Delete(model.Inbound{}, id).Error
 }
+func (s *InboundService) DelInboundByPort(port int) error {
+	db := database.GetDB()
+	var inbound model.Inbound
+	db.First(&inbound, "port = ?", port)
+	return db.Delete(&inbound).Error
+}
 
 func (s *InboundService) GetInbound(id int) (*model.Inbound, error) {
 	db := database.GetDB()
@@ -414,4 +420,61 @@ func (s *InboundService) GetClientTrafficById(uuid string) (traffic *xray.Client
 		return nil, err
 	}
 	return traffic, err
+}
+func (s *InboundService) GetInboundClientIps(clientEmail string) (string, error) {
+	db := database.GetDB()
+	InboundClientIps := &model.InboundClientIps{}
+	err := db.Model(model.InboundClientIps{}).Where("client_email = ?", clientEmail).First(InboundClientIps).Error
+	if err != nil {
+		return "", err
+	}
+	return InboundClientIps.Ips, nil
+}
+func (s *InboundService) ClearClientIps(clientEmail string) (error) {
+	db := database.GetDB()
+
+	result := db.Model(model.InboundClientIps{}).
+		Where("client_email = ?", clientEmail).
+		Update("ips", "")
+	err := result.Error
+
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (s *InboundService) ClearTrafficByPort(port int) error {
+	db := database.GetDB()
+	Uperr := db.Model(model.Inbound{}).Where("port = ?", port).Update("up", 0).Error
+	if Uperr != nil {
+		fmt.Println("ClearTrafficByPort error:clear up failed")
+		return Uperr
+	}
+	Downerr := db.Model(model.Inbound{}).Where("port = ?", port).Update("down", 0).Error
+	if Downerr != nil {
+		fmt.Println("ClearTrafficByPort error:clear down failed")
+		return Downerr
+	}
+	return nil
+}
+
+func (s *InboundService) ClearAllInboundTraffic() error {
+	inbounds, _ := s.GetAllInbounds()
+	for _, inbound := range inbounds {
+		err := s.ClearTrafficByPort(inbound.Port)
+		if err != nil {
+			fmt.Printf("ClearAllInboundTraffic error,ClearTrafficByPort port %d fail", inbound.Port)
+			continue
+		}
+	}
+	return nil
+}
+func (s *InboundService) DisableInboundByPort(port int) error {
+	db := database.GetDB()
+	return db.Model(model.Inbound{}).Where("port = ?", port).Update("enable", false).Error
+}
+func (s *InboundService) EnableInboundByPort(port int) error {
+	db := database.GetDB()
+	return db.Model(model.Inbound{}).Where("port = ?", port).Update("enable", true).Error
 }
