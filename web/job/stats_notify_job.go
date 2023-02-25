@@ -1,6 +1,8 @@
 package job
 
 import (
+	"log"
+	"runtime"
 	"fmt"
 	"net"
 	"os"
@@ -15,7 +17,7 @@ import (
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 )
-
+var botInstace *tgbotapi.BotAPI
 type LoginStatus byte
 
 const (
