@@ -237,7 +237,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 		}
 
 		//logger.Infof("Will delete port:%d inbound", inboundPortValue)
-		error := s.inboundService.DelInboundByPort(inboundPortValue)
+		error := j.inboundService.DelInboundByPort(inboundPortValue)
 		if error != nil {
 			msg.Text = fmt.Sprintf("⚠ حذف کانفیگ به پورت %d انجام نشد", inboundPortValue)
 		} else {
@@ -245,7 +245,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 		}
 		msg.ReplyMarkup = numericKeyboard
 	case "restart":
-		err := s.xrayService.RestartXray(true)
+		err := j.xrayService.RestartXray(true)
 		if err != nil {
 			msg.Text = fmt.Sprintln("⚠ راه اندازی مجدد سرویس XRAY ناموفق بود, err: ", err)
 		} else {
@@ -260,7 +260,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			break
 		}
 		//logger.Infof("Will delete port:%d inbound", inboundPortValue)
-		error := s.inboundService.DisableInboundByPort(inboundPortValue)
+		error := j.inboundService.DisableInboundByPort(inboundPortValue)
 		if error != nil {
 			msg.Text = fmt.Sprintf("⚠ کانفیگ با پورت %d غیرفعال نشد, err: %s", inboundPortValue, error)
 		} else {
@@ -275,7 +275,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			break
 		}
 		//logger.Infof("Will delete port:%d inbound", inboundPortValue)
-		error := s.inboundService.EnableInboundByPort(inboundPortValue)
+		error := j.inboundService.EnableInboundByPort(inboundPortValue)
 		if error != nil {
 			msg.Text = fmt.Sprintf("⚠ فعال کردن کانفیگ با پورت %d موفق نبود, err: %s", inboundPortValue, error)
 		} else {
@@ -289,7 +289,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			msg.Text = "🔴 پورت ورودی نامعتبر است، لطفا بررسی کنید"
 			break
 		}
-		error := s.inboundService.ClearTrafficByPort(inboundPortValue)
+		error := j.inboundService.ClearTrafficByPort(inboundPortValue)
 		if error != nil {
 			msg.Text = fmt.Sprintf("⚠ ریست ترافیک پورت %d انجام نشد, err: %s", inboundPortValue, error)
 		} else {
@@ -297,7 +297,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 		}
 		msg.ReplyMarkup = numericKeyboard
 	case "clearall":
-		error := s.inboundService.ClearAllInboundTraffic()
+		error := j.inboundService.ClearAllInboundTraffic()
 		if error != nil {
 			msg.Text = fmt.Sprintf("⚠ ریست ترافیک کل کانفیگ ها انجام نشد, err: %s", error)
 		} else {
@@ -311,7 +311,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
 			msg.ReplyMarkup = numericKeyboard
 	case "status":
-			msg.Text = s.GetsystemStatus()
+			msg.Text = j.GetsystemStatus()
 			msg.ReplyMarkup = numericKeyboard
 	case "start":
 			msg.Text = `
@@ -367,7 +367,7 @@ func (j*StatsNotifyJob) GetsystemStatus() string {
 	}
 
 	// xray version
-	status += fmt.Sprintf("🟡 Current XRay kernel version: %s\r\n", s.xrayService.GetXrayVersion())
+	status += fmt.Sprintf("🟡 Current XRay kernel version: %s\r\n", j.xrayService.GetXrayVersion())
 
 	// ip address
 	var ip string
@@ -375,7 +375,7 @@ func (j*StatsNotifyJob) GetsystemStatus() string {
 	status += fmt.Sprintf("🆔 IP Address: %s\r\n \r\n", ip)
 
 	// get traffic
-	inbouds, err := s.inboundService.GetAllInbounds()
+	inbouds, err := j.inboundService.GetAllInbounds()
 	if err != nil {
 		logger.Warning("StatsNotifyJob run error: ", err)
 	}
