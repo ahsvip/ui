@@ -2,13 +2,13 @@ package job
 
 import (
 	"fmt"
-	"log"
 	"os"
-	"runtime"
+	"os/exec"
 	"strconv"
 	"time"
 	"x-ui/logger"
 	"x-ui/util/common"
+	"x-ui/web/service"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/shirou/gopsutil/host"
