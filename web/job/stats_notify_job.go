@@ -73,6 +73,7 @@ func (j *StatsNotifyJob) Run() {
 		fmt.Println("get hostname error:", err)
 		return
 	}
+
 	info = fmt.Sprintf("نام سرور : %s\r\n", name)
 	//get ip address
 	var ip string
