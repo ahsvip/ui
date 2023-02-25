@@ -173,7 +173,7 @@ var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
     ),
 	tgbotapi.NewInlineKeyboardRow(
         tgbotapi.NewInlineKeyboardButtonData("راهنمایی", "help")
-    )
+    ),
 )
 
 func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
