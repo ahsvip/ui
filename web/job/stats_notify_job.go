@@ -54,7 +54,7 @@ func (j *StatsNotifyJob) SendMsgToTgbot(msg string) {
 	bot.Debug = true
 	fmt.Printf("Authorized on account %s", bot.Self.UserName)
 	info := tgbotapi.NewMessage(int64(tgBotid), msg)
-	vmsg.ReplyToMessageID = int(tgBotid)
+	msg.ReplyToMessageID = int(tgBotid)
 	bot.Send(info)
 }
 
