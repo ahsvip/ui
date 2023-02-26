@@ -168,7 +168,6 @@ var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardButtonData("github", "github"),),
 	tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("help", "help"),),
-    ),
 )
 
 func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
