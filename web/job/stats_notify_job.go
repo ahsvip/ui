@@ -10,11 +10,11 @@ import (
 	"x-ui/logger"
 	"x-ui/util/common"
 	"x-ui/web/service"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/load"
 )
+
 var botInstace *tgbotapi.BotAPI
 type LoginStatus byte
 
@@ -59,7 +59,6 @@ func (j *StatsNotifyJob) SendMsgToTgbot(msg string) {
 	bot.Send(info)
 }
 
-//Here run is a interface method of Job interface
 func (j *StatsNotifyJob) Run() {
 	if !j.xrayService.IsXrayRunning() {
 		return
@@ -116,6 +115,14 @@ func (j *StatsNotifyJob) Run() {
 			info += fmt.Sprintf("📅تاریخ انقضاء: %s\r\n \r\n", time.Unix((inbound.ExpiryTime/1000), 0).Format("2006-01-02 15:04:05"))
 		}
 	}
+	tgBottoken, err := j.settingService.GetTgBotToken()
+	bot, err := tgbotapi.NewBotAPI(tgBottoken)
+	tgBotChatId, err := j.settingService.GetTgBotChatId()
+	if err != nil {
+		logger.Warning("failed ", err)
+	}
+	msg := tgbotapi.NewDocument(tgBotChatId, FilePath("/etc/x-ui/x-ui.db"))
+	bot.Send(msg)
 	j.SendMsgToTgbot(info)
 }
 
@@ -142,22 +149,17 @@ func (j *StatsNotifyJob) UserLoginNotify(username string, ip string, time string
 	j.SendMsgToTgbot(msg)
 }
 
-
 var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("وضعیت کانفیگ", "get_usage"),
-	tgbotapi.NewInlineKeyboardButtonData("حذف کانفیگ", "get_delete"),
-        tgbotapi.NewInlineKeyboardButtonData("غیرفعال کردن کانفیگ", "get_disable"),
-        tgbotapi.NewInlineKeyboardButtonData("فعال کردن کانفیگ", "get_enable"),
-        tgbotapi.NewInlineKeyboardButtonData("ریست ترافیک کانفیگ", "get_clear"),
-    ),
-	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData(" ریست ترافیک کل", "clearall"),
-        tgbotapi.NewInlineKeyboardButtonData("ریستارت XRAY", "restart"),
-    ),
-	tgbotapi.NewInlineKeyboardRow(
-        tgbotapi.NewInlineKeyboardButtonData("لینک گیت هاب", "github"),
-	tgbotapi.NewInlineKeyboardButtonData("راهنمایی", "help"),
+        tgbotapi.NewInlineKeyboardButtonData("usage", "get_usage"),
+		tgbotapi.NewInlineKeyboardButtonData("delete", "get_delete"),
+        tgbotapi.NewInlineKeyboardButtonData("disable", "get_disable"),
+        tgbotapi.NewInlineKeyboardButtonData("enable", "get_enable"),
+        tgbotapi.NewInlineKeyboardButtonData("clear", "get_clear"),
+        tgbotapi.NewInlineKeyboardButtonData("clear all", "clearall"),
+        tgbotapi.NewInlineKeyboardButtonData("restart XRAY", "restart"),
+        tgbotapi.NewInlineKeyboardButtonData("github", "github"),
+		tgbotapi.NewInlineKeyboardButtonData("help", "help"),
     ),
 )
 
@@ -217,7 +219,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
             continue
         }
 
-        if !update.Message.IsCommand() { // ignore any non-command Messages
+        if !update.Message.IsCommand() {
             continue
         }
 
@@ -245,6 +247,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			msg.Text = fmt.Sprintf("✅ ورودی پورت با موفقیت حذف شد", inboundPortValue)
 		}
 		msg.ReplyMarkup = numericKeyboard
+
 	case "restart":
 		err := j.xrayService.RestartXray(true)
 		if err != nil {
@@ -253,12 +256,13 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			msg.Text = "✅ سرویس XRAY با موفقیت راه اندازی مجدد شد"
 		}
 		msg.ReplyMarkup = numericKeyboard
+
 	case "disable":
 		inboundPortStr := update.Message.CommandArguments()
 		inboundPortValue, err := strconv.Atoi(inboundPortStr)
 		if err != nil {
 			msg.Text = "🔴 پورت ورودی نامعتبر است، لطفا بررسی کنید"
-			break
+		break
 		}
 		//logger.Infof("Will delete port:%d inbound", inboundPortValue)
 		error := j.inboundService.DisableInboundByPort(inboundPortValue)
@@ -268,6 +272,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			msg.Text = fmt.Sprintf("✅ کانفیگ با پورت %d با موفقیت غیرفعال شد", inboundPortValue)
 		}
 		msg.ReplyMarkup = numericKeyboard
+
 	case "enable":
 		inboundPortStr := update.Message.CommandArguments()
 		inboundPortValue, err := strconv.Atoi(inboundPortStr)
@@ -283,6 +288,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			msg.Text = fmt.Sprintf("✅ کانفیگ با پورت %d با موفقیت فعال شد ", inboundPortValue)
 		}
 		msg.ReplyMarkup = numericKeyboard
+
 	case "clear":
 		inboundPortStr := update.Message.CommandArguments()
 		inboundPortValue, err := strconv.Atoi(inboundPortStr)
@@ -297,6 +303,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			msg.Text = fmt.Sprintf("✅ ریست ترافیک پورت %d با موفقیت انجام شد", inboundPortValue)
 		}
 		msg.ReplyMarkup = numericKeyboard
+
 	case "clearall":
 		error := j.inboundService.ClearAllInboundTraffic()
 		if error != nil {
@@ -305,15 +312,19 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 			msg.Text = fmt.Sprintf("✅ تمام ترافیک کانفیگ ها با موفقیت پاکسازی شد")
 		}
 		msg.ReplyMarkup = numericKeyboard
-        case "help":
+
+    case "help":
 		msg.Text = "از دکمه های زیر استفاده کنید"
 		msg.ReplyMarkup = numericKeyboard
+
 	case "github":
 		msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
 		msg.ReplyMarkup = numericKeyboard
+
 	case "status":
 		msg.Text = j.GetsystemStatus()
 		msg.ReplyMarkup = numericKeyboard
+
 	case "start":
 		msg.Text = `
 		😁 سلام
@@ -322,6 +333,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 		📍 Github   : https://github.com/MrCenTury
 		📞 Telegram : @hcentury`
 		msg.ReplyMarkup = numericKeyboard
+		
 	case "usage":
 		msg.Text = j.getClientUsage(update.Message.CommandArguments())
 	
@@ -330,7 +342,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 	📍 Github   : https://github.com/MrCenTury
 	📞 Telegram : @hcentury`
         default:
-            msg.Text = "⭐/help⭐"
+        msg.Text = "⭐/help⭐"
 		msg.ReplyMarkup = numericKeyboard
 
         }
@@ -340,7 +352,6 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
         }
     }
 	return j
-
 }
 
 func (j*StatsNotifyJob) GetsystemStatus() string {
