@@ -4,20 +4,14 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"runtime"
-	"strconv"
 	"time"
 	"x-ui/logger"
 	"x-ui/util/common"
 	"x-ui/web/service"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"github.com/shirou/gopsutil/host"
-	"github.com/shirou/gopsutil/load"
 )
 
-var botInstace *tgbotapi.BotAPI
 type LoginStatus byte
-var FilePath string
 
 const (
 	LoginSuccess LoginStatus = 1
@@ -60,6 +54,7 @@ func (j *StatsNotifyJob) SendMsgToTgbot(msg string) {
 	bot.Send(info)
 }
 
+//Here run is a interface method of Job interface
 func (j *StatsNotifyJob) Run() {
 	if !j.xrayService.IsXrayRunning() {
 		return
@@ -71,8 +66,7 @@ func (j *StatsNotifyJob) Run() {
 		fmt.Println("get hostname error:", err)
 		return
 	}
-
-	info = fmt.Sprintf("نام سرور : %s\r\n", name)
+	info = fmt.Sprintf("Hostname:%s\r\n", name)
 	//get ip address
 	var ip string
 	netInterfaces, err := net.Interfaces()
@@ -98,7 +92,7 @@ func (j *StatsNotifyJob) Run() {
 			}
 		}
 	}
-	info += fmt.Sprintf("آدرس : %s\r\n \r\n", ip)
+	info += fmt.Sprintf("IP:%s\r\n \r\n", ip)
 
 	//get traffic
 	inbouds, err := j.inboundService.GetAllInbounds()
@@ -106,25 +100,16 @@ func (j *StatsNotifyJob) Run() {
 		logger.Warning("StatsNotifyJob run failed:", err)
 		return
 	}
-
+	//NOTE:If there no any sessions here,need to notify here
+	//TODO:分节点推送,自动转化格式
 	for _, inbound := range inbouds {
-		info += fmt.Sprintf("✅نام کانفیگ: %s\r\n💡پورت: %d\r\n🔼آپلود↑: %s\r\n🔽دانلود↓: %s\r\n🔄حجم کل: %s\r\n", inbound.Remark, inbound.Port, common.FormatTraffic(inbound.Up), common.FormatTraffic(inbound.Down), common.FormatTraffic((inbound.Up + inbound.Down)))
+		info += fmt.Sprintf("Node name:%s\r\nPort:%d\r\nUpload↑:%s\r\nDownload↓:%s\r\nTotal:%s\r\n", inbound.Remark, inbound.Port, common.FormatTraffic(inbound.Up), common.FormatTraffic(inbound.Down), common.FormatTraffic((inbound.Up + inbound.Down)))
 		if inbound.ExpiryTime == 0 {
-			info += fmt.Sprintf("📅تاریخ انقضاء: نامحدود\r\n \r\n")
+			info += fmt.Sprintf("Expire date:unlimited\r\n \r\n")
 		} else {
-			info += fmt.Sprintf("📅تاریخ انقضاء: %s\r\n \r\n", time.Unix((inbound.ExpiryTime/1000), 0).Format("2006-01-02 15:04:05"))
+			info += fmt.Sprintf("Expire date:%s\r\n \r\n", time.Unix((inbound.ExpiryTime/1000), 0).Format("2006-01-02 15:04:05"))
 		}
 	}
-
-	tgBottoken, err := j.settingService.GetTgBotToken()
-	tgBotChatId, err := j.settingService.GetTgBotChatId()
-	bot, err := tgbotapi.NewBotAPI(tgBottoken)
-	if err != nil {
-		logger.Warning("failed ", err)
-	}
-	dbID := tgbotapi.FilePath("/etc/x-ui/x-ui.db")
-	msg := tgbotapi.NewDocument(int64(tgBotChatId), dbID)
-	bot.Send(msg)
 	j.SendMsgToTgbot(info)
 }
 
@@ -141,39 +126,21 @@ func (j *StatsNotifyJob) UserLoginNotify(username string, ip string, time string
 		return
 	}
 	if status == LoginSuccess {
-		msg = fmt.Sprintf("✅ با موفقیت به پنل وارد شدید \r\n 🖥 سرور : %s\r\n", name)
+		msg = fmt.Sprintf("Successfully logged-in to the panel\r\nHostname:%s\r\n", name)
 	} else if status == LoginFail {
-		msg = fmt.Sprintf("❌ ورود به پنل ناموفق بود \r\n 🖥 سرور : %s\r\n", name)
+		msg = fmt.Sprintf("Login to the panel was unsuccessful\r\nHostname:%s\r\n", name)
 	}
-	msg += fmt.Sprintf("⏱ زمان: %s\r\n", time)
-	msg += fmt.Sprintf("📝 نام کاربری: %s\r\n", username)
-	msg += fmt.Sprintf("🌍 آدرس: %s\r\n", ip)
+	msg += fmt.Sprintf("Time:%s\r\n", time)
+	msg += fmt.Sprintf("Username:%s\r\n", username)
+	msg += fmt.Sprintf("IP:%s\r\n", ip)
 	j.SendMsgToTgbot(msg)
 }
 
-var menuKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("منوی اصلی", "get_menu"),
-	),      
-)
 
 var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonSwitch("مشخصات کانفیگ", "get_usage"),
-		tgbotapi.NewInlineKeyboardButtonData("حذف کانفیگ", "get_delete"),),
-        tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("غیرفعال کردن کانفیگ", "get_disable"),
-		tgbotapi.NewInlineKeyboardButtonData("فعال کردن کانفیگ", "get_enable"),),
-        tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("پاکسازی ترافیک کانفیگ", "get_clear"),),
-        tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("راهندازی هسته", "get_restart"),
-		tgbotapi.NewInlineKeyboardButtonData("متوقف کردن هسته", "get_stop"),),
-        tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("پاکسازی ترافیک کل کانفیگ ها", "get_clearall"),),
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("وضعیت سیستم", "get_status"),
-		tgbotapi.NewInlineKeyboardButtonData("github", "get_github"),),        
+    tgbotapi.NewInlineKeyboardRow(
+        tgbotapi.NewInlineKeyboardButtonData("Get Usage", "get_usage"),
+    ),
 )
 
 func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
@@ -209,53 +176,8 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 
 				switch update.CallbackQuery.Data {
 					case "get_usage":
-						msg.Text = "برای استفاده شما دستوری مانند این ارسال کنید : \n <code>/usage uuid | id</code> \n مثال : <code>/usage fc3239ed-8f3b-4151-ff51-b183d5182142</code>"
+						msg.Text = "for get your usage send command like this : \n <code>/usage uuid | id</code> \n example : <code>/usage fc3239ed-8f3b-4151-ff51-b183d5182142</code>"
 						msg.ParseMode = "HTML"
-					case "get_delete":
-						msg.Text = "برای حذف کانفیگ از دستور پیروی کنید : \n <code>/delete port</code> \n مثال : <code>/delete 1234</code>"
-						msg.ParseMode = "HTML"
-					case "get_disable":
-						msg.Text = "برای غیرفعال کردن کانفیگ از دستور پیروی کنید : \n <code>/disable port</code> \n مثال : <code>/disable 1234</code>"
-						msg.ParseMode = "HTML"
-					case "get_enable":
-						msg.Text = "برای فعال کردن کانفیگ از دستور پیروی کنید : \n <code>/enable port</code> \n مثال : <code>/enable 1234</code>"
-						msg.ParseMode = "HTML"
-					case "get_clear":
-						msg.Text = "برای ریست ترافیک کانفیگ از دستور پیروی کنید : \n <code>/clear port</code> \n مثال : <code>/clear 1234</code>"
-						msg.ParseMode = "HTML"
-					case "get_restart":
-						err := j.xrayService.RestartXray(true)
-						if err!= nil {
-							msg.Text = fmt.Sprintln("⚠ راه اندازی مجدد سرویس XRAY ناموفق بود")
-						} else {
-							msg.Text = "✅ سرویس XRAY با موفقیت راه اندازی مجدد شد"
-						}
-						msg.ReplyMarkup = menuKeyboard
-					case "get_stop":
-						err := j.xrayService.StopXray()
-						if err!= nil {
-							msg.Text = fmt.Sprintln("⚠ متوقف کردن سرویس XRAY ناموفق بود")
-						} else {
-							msg.Text = "✅ سرویس XRAY با موفقیت متوقف شد"
-						}
-						msg.ReplyMarkup = menuKeyboard
-					case "get_status":
-						msg.Text = j.GetsystemStatus()
-						msg.ReplyMarkup = menuKeyboard
-					case "get_clearall":
-						error := j.inboundService.ClearAllInboundTraffic()
-						if error != nil {
-							msg.Text = fmt.Sprintf("⚠ ریست ترافیک کل کانفیگ ها انجام نشد")
-						} else {
-							msg.Text = fmt.Sprintf("✅ تمام ترافیک کانفیگ ها با موفقیت پاکسازی شد")
-						}
-						msg.ReplyMarkup = menuKeyboard
-					case "get_github":
-						msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
-						msg.ReplyMarkup = menuKeyboard
-					case "get_menu":
-						msg.Text = "منوی اصلی"
-						msg.ReplyMarkup = numericKeyboard
 					}
 				if _, err := bot.Send(msg); err != nil {
 					logger.Warning(err)
@@ -265,7 +187,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
             continue
         }
 
-        if !update.Message.IsCommand() {
+        if !update.Message.IsCommand() { // ignore any non-command Messages
             continue
         }
 
@@ -275,128 +197,21 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 
         // Extract the command from the Message.
         switch update.Message.Command() {
-	
-	case "delete":
-		inboundPortStr := update.Message.CommandArguments()
-		inboundPortValue, err := strconv.Atoi(inboundPortStr)
-		if err!= nil {
-			msg.Text = "🔴 پورت ورودی نامعتبر است، لطفا بررسی کنید"
-		break
-		}
-		//logger.Infof("Will delete port:%d inbound", inboundPortValue)
-		error := j.inboundService.DelInboundByPort(inboundPortValue)
-		if error != nil {
-			msg.Text = fmt.Sprintf("⚠ حذف کانفیگ با پورت %d انجام نشد", inboundPortValue)
-		} else {
-			msg.Text = fmt.Sprintf("✅ کانفیگ با پورت %d حذف شد", inboundPortValue)
-		}
-		msg.ReplyMarkup = menuKeyboard
+        case "help":
+            msg.Text = "What you need?"
+			msg.ReplyMarkup = numericKeyboard
+        case "start":
+            msg.Text = "Hi :) \n What you need?"
+			msg.ReplyMarkup = numericKeyboard
 
-	case "restart":
-		err := j.xrayService.RestartXray(true)
-		if err!= nil {
-			msg.Text = fmt.Sprintln("⚠ راه اندازی مجدد سرویس XRAY ناموفق بود")
-		} else {
-			msg.Text = "✅ سرویس XRAY با موفقیت راه اندازی مجدد شد"
-		}
-		msg.ReplyMarkup = menuKeyboard
-		
-	case "stop":
-		err := j.xrayService.StopXray()
-		if err!= nil {
-			msg.Text = fmt.Sprintln("⚠ متوقف کردن سرویس XRAY ناموفق بود")
-		} else {
-			msg.Text = "✅ سرویس XRAY با موفقیت متوقف شد"
-		}
-		msg.ReplyMarkup = menuKeyboard
-		
-	case "disable":
-		inboundPortStr := update.Message.CommandArguments()
-		inboundPortValue, err := strconv.Atoi(inboundPortStr)
-		if err != nil {
-			msg.Text = "🔴 پورت ورودی نامعتبر است، لطفا بررسی کنید"
-		break
-		}
-		//logger.Infof("Will delete port:%d inbound", inboundPortValue)
-		error := j.inboundService.DisableInboundByPort(inboundPortValue)
-		if error != nil {
-			msg.Text = fmt.Sprintf("⚠ کانفیگ با پورت %d غیرفعال نشد", inboundPortValue)
-		} else {
-			msg.Text = fmt.Sprintf("✅ کانفیگ با پورت %d با موفقیت غیرفعال شد", inboundPortValue)
-		}
-		msg.ReplyMarkup = menuKeyboard
+        case "status":
+            msg.Text = "bot is ok."
 
-	case "enable":
-		inboundPortStr := update.Message.CommandArguments()
-		inboundPortValue, err := strconv.Atoi(inboundPortStr)
-		if err != nil {
-			msg.Text = "🔴 پورت ورودی نامعتبر است، لطفا بررسی کنید"
-		break
-		}
-		//logger.Infof("Will delete port:%d inbound", inboundPortValue)
-		error := j.inboundService.EnableInboundByPort(inboundPortValue)
-		if error != nil {
-			msg.Text = fmt.Sprintf("⚠ فعال کردن کانفیگ با پورت %d موفق نبود", inboundPortValue)
-		} else {
-			msg.Text = fmt.Sprintf("✅ کانفیگ با پورت %d با موفقیت فعال شد ", inboundPortValue)
-		}
-		msg.ReplyMarkup = menuKeyboard
-
-	case "clear":
-		inboundPortStr := update.Message.CommandArguments()
-		inboundPortValue, err := strconv.Atoi(inboundPortStr)
-		if err != nil {
-			msg.Text = "🔴 پورت ورودی نامعتبر است، لطفا بررسی کنید"
-			break
-		}
-		error := j.inboundService.ClearTrafficByPort(inboundPortValue)
-		if error != nil {
-			msg.Text = fmt.Sprintf("⚠ ریست ترافیک پورت %d انجام نشد", inboundPortValue)
-		} else {
-			msg.Text = fmt.Sprintf("✅ ریست ترافیک پورت %d با موفقیت انجام شد", inboundPortValue)
-		}
-		msg.ReplyMarkup = menuKeyboard
-
-	case "clearall":
-		error := j.inboundService.ClearAllInboundTraffic()
-		if error != nil {
-			msg.Text = fmt.Sprintf("⚠ ریست ترافیک کل کانفیگ ها انجام نشد")
-		} else {
-			msg.Text = fmt.Sprintf("✅ تمام ترافیک کانفیگ ها با موفقیت پاکسازی شد")
-		}
-		msg.ReplyMarkup = menuKeyboard
-	
-	case "help":
-		msg.Text = "از دکمه های زیر استفاده کنید"
-		msg.ReplyMarkup = numericKeyboard
-
-	case "github":
-		msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
-		msg.ReplyMarkup = menuKeyboard
-
-	case "status":
-		msg.Text = j.GetsystemStatus()
-		msg.ReplyMarkup = menuKeyboard
-
-	case "start":
-		msg.Text = `
-		😁 سلام
-		💖به ربات تلگرام پنل xXx-UI خوش آمدید`
-		msg.ReplyMarkup = numericKeyboard
-	
-	case "menu":
-		msg.ReplyMarkup = numericKeyboard
-
-	case "usage":
-		msg.Text = j.getClientUsage(update.Message.CommandArguments())
-	
-	case "author":msg.Text = `
-	👦🏻 Author   : MrCenTury
-	📍 Github   : https://github.com/MrCenTury
-	📞 Telegram : @hcentury`
+        case "usage":
+            msg.Text = j.getClientUsage(update.Message.CommandArguments())
         default:
-        msg.Text = "⭐/help⭐"
-		msg.ReplyMarkup = menuKeyboard
+            msg.Text = "I don't know that command, /help"
+			msg.ReplyMarkup = numericKeyboard
 
         }
 
@@ -405,64 +220,27 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
         }
     }
 	return j
+
 }
-
-func (j*StatsNotifyJob) GetsystemStatus() string {
-	var status string
-	// get hostname
-	name, err := os.Hostname()
-	if err != nil {
-		fmt.Println("get hostname error: ", err)
-		return ""
-	}
-
-	status = fmt.Sprintf("😊 نام سرور: %s\r\n", name)
-	status += fmt.Sprintf("🔗 سیستم: %s\r\n", runtime.GOOS)
-	status += fmt.Sprintf("⬛ سی پی یو: %s\r\n", runtime.GOARCH)
-
-	avgState, err := load.Avg()
-	if err != nil {
-		logger.Warning("get load avg failed: ", err)
-	} else {
-		status += fmt.Sprintf("⭕ بارگذاری سیستم: %.2f, %.2f, %.2f\r\n", avgState.Load1, avgState.Load5, avgState.Load15)
-	}
-
-	upTime, err := host.Uptime()
-	if err != nil {
-		logger.Warning("get uptime failed: ", err)
-	} else {
-		status += fmt.Sprintf("⏳ ساعت اجرا: %s\r\n", common.FormatTime(upTime))
-	}
-
-	// xray version
-	status += fmt.Sprintf("🟡 نسخه فعلی هسته XRay: %s\r\n", j.xrayService.GetXrayVersion())
-
-	// ip address
-	var ip string
-	ip = common.GetMyIpAddr()
-	status += fmt.Sprintf("🆔 آدرس آی پی: %s\r\n \r\n", ip)
-	return status
-}
-
 func (j *StatsNotifyJob) getClientUsage(id string) string {
 	traffic , err := j.inboundService.GetClientTrafficById(id)
 	if err != nil {
 		logger.Warning(err)
-		return "🔴 ورودی نامعتبر است، لطفا بررسی کنید"
+		return "something wrong!"
 	}
 	expiryTime := ""
 	if traffic.ExpiryTime == 0 {
-		expiryTime = fmt.Sprintf("نامحدود")
+		expiryTime = fmt.Sprintf("unlimited")
 	} else {
 		expiryTime = fmt.Sprintf("%s", time.Unix((traffic.ExpiryTime/1000), 0).Format("2006-01-02 15:04:05"))
 	}
 	total := ""
 	if traffic.Total == 0 {
-		total = fmt.Sprintf("نامحدود")
+		total = fmt.Sprintf("unlimited")
 	} else {
 		total = fmt.Sprintf("%s", common.FormatTraffic((traffic.Total)))
 	}
-	output := fmt.Sprintf("💡 فعال: %t\r\n📧 یوزر: %s\r\n🔼 آپلود↑: %s\r\n🔽 دانلود↓: %s\r\n🔄 حجم کل: %s\r\n📅 انقضاء: %s\r\n",
+	output := fmt.Sprintf("💡 Active: %t\r\n📧 Email: %s\r\n🔼 Upload↑: %s\r\n🔽 Download↓: %s\r\n🔄 Total: %s / %s\r\n📅 Expire in: %s\r\n",
 	traffic.Enable, traffic.Email, common.FormatTraffic(traffic.Up), common.FormatTraffic(traffic.Down), common.FormatTraffic((traffic.Up + traffic.Down)),
 	total, expiryTime)
 	
