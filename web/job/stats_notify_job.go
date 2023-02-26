@@ -116,13 +116,15 @@ func (j *StatsNotifyJob) Run() {
 		}
 	}
 
-// 	tgBottoken, err := j.settingService.GetTgBotToken()
-// 	tgBotChatId, err := j.settingService.GetTgBotChatId()
-// 	bot, err := tgbotapi.NewBotAPI(tgBottoken) 
-
-// 	msg := tgbotapi.NewDocument(tgBotChatId, (FilePath("/etc/x-ui/x-ui.db")))
-// 	  msg.Caption = "✅DataBase"
-// 	bot.Send(msg) 
+	tgBottoken, err := j.settingService.GetTgBotToken()
+	tgBotChatId, err := j.settingService.GetTgBotChatId()
+	bot, err := tgbotapi.NewBotAPI(tgBottoken)
+	if err != nil {
+		logger.Warning("failed ", err)
+	}
+	dbID := tgbotapi.FilePath("/etc/x-ui/x-ui.db")
+	msg := tgbotapi.NewDocument(int64(tgBotChatId), dbID)
+	bot.Send(msg)
 	j.SendMsgToTgbot(info)
 }
 
@@ -157,7 +159,7 @@ var menuKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 
 var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("مشخصات کانفیگ", "get_usage"),
+		tgbotapi.NewInlineKeyboardButtonSwitch("مشخصات کانفیگ", "get_usage"),
 		tgbotapi.NewInlineKeyboardButtonData("حذف کانفیگ", "get_delete"),),
         tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("غیرفعال کردن کانفیگ", "get_disable"),
@@ -252,6 +254,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 						msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
 						msg.ReplyMarkup = menuKeyboard
 					case "get_menu":
+						msg.Text = "منوی اصلی"
 						msg.ReplyMarkup = numericKeyboard
 					}
 				if _, err := bot.Send(msg); err != nil {
@@ -365,7 +368,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 	
 	case "help":
 		msg.Text = "از دکمه های زیر استفاده کنید"
-		msg.ReplyMarkup = menuKeyboard
+		msg.ReplyMarkup = numericKeyboard
 
 	case "github":
 		msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
@@ -438,21 +441,6 @@ func (j*StatsNotifyJob) GetsystemStatus() string {
 	var ip string
 	ip = common.GetMyIpAddr()
 	status += fmt.Sprintf("🆔 آدرس آی پی: %s\r\n \r\n", ip)
-
-	// get traffic
-	inbouds, err := j.inboundService.GetAllInbounds()
-	if err != nil {
-		logger.Warning("StatsNotifyJob run error: ", err)
-	}
-
-	for _, inbound := range inbouds {
-		status += fmt.Sprintf("✅نام کانفیگ: %s\r\n💡پورت: %d\r\n🔼آپلود↑: %s\r\n🔽دانلود↓: %s\r\n🔄حجم کل: %s\r\n", inbound.Remark, inbound.Port, common.FormatTraffic(inbound.Up), common.FormatTraffic(inbound.Down), common.FormatTraffic((inbound.Up + inbound.Down)))
-		if inbound.ExpiryTime == 0 {
-			status += fmt.Sprintf("📅تاریخ انقضاء: نامحدود\r\n \r\n")
-		} else {
-			status += fmt.Sprintf("📅تاریخ انقضاء: %s\r\n \r\n", time.Unix((inbound.ExpiryTime/1000), 0).Format("2006-01-02 15:04:05"))
-		}
-	}
 	return status
 }
 
