@@ -1,10 +1,10 @@
 package job
 
 import (
-	"runtime"
 	"fmt"
 	"net"
 	"os"
+	"runtime"
 	"strconv"
 	"time"
 	"x-ui/logger"
@@ -17,6 +17,7 @@ import (
 
 var botInstace *tgbotapi.BotAPI
 type LoginStatus byte
+var FilePath string
 
 const (
 	LoginSuccess LoginStatus = 1
@@ -106,7 +107,6 @@ func (j *StatsNotifyJob) Run() {
 		return
 	}
 
-	
 	for _, inbound := range inbouds {
 		info += fmt.Sprintf("✅نام کانفیگ: %s\r\n💡پورت: %d\r\n🔼آپلود↑: %s\r\n🔽دانلود↓: %s\r\n🔄حجم کل:% s\r\n", inbound.Remark, inbound.Port, common.FormatTraffic(inbound.Up), common.FormatTraffic(inbound.Down), common.FormatTraffic((inbound.Up + inbound.Down)))
 		if inbound.ExpiryTime == 0 {
@@ -115,14 +115,14 @@ func (j *StatsNotifyJob) Run() {
 			info += fmt.Sprintf("📅تاریخ انقضاء: %s\r\n \r\n", time.Unix((inbound.ExpiryTime/1000), 0).Format("2006-01-02 15:04:05"))
 		}
 	}
-	tgBottoken, err := j.settingService.GetTgBotToken()
-	bot, err := tgbotapi.NewBotAPI(tgBottoken)
-	tgBotChatId, err := j.settingService.GetTgBotChatId()
-	if err != nil {
-		logger.Warning("failed ", err)
-	}
-	msg := tgbotapi.NewDocument(tgBotChatId, FilePath("/etc/x-ui/x-ui.db"))
-	bot.Send(msg)
+
+// 	tgBottoken, err := j.settingService.GetTgBotToken()
+// 	tgBotChatId, err := j.settingService.GetTgBotChatId()
+// 	bot, err := tgbotapi.NewBotAPI(tgBottoken) 
+
+// 	msg := tgbotapi.NewDocument(tgBotChatId, (FilePath("/etc/x-ui/x-ui.db")))
+// 	  msg.Caption = "✅DataBase"
+// 	bot.Send(msg) 
 	j.SendMsgToTgbot(info)
 }
 
@@ -152,14 +152,14 @@ func (j *StatsNotifyJob) UserLoginNotify(username string, ip string, time string
 var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(
         tgbotapi.NewInlineKeyboardButtonData("usage", "get_usage"),
-		tgbotapi.NewInlineKeyboardButtonData("delete", "get_delete"),
+	tgbotapi.NewInlineKeyboardButtonData("delete", "get_delete"),
         tgbotapi.NewInlineKeyboardButtonData("disable", "get_disable"),
         tgbotapi.NewInlineKeyboardButtonData("enable", "get_enable"),
         tgbotapi.NewInlineKeyboardButtonData("clear", "get_clear"),
         tgbotapi.NewInlineKeyboardButtonData("clear all", "clearall"),
         tgbotapi.NewInlineKeyboardButtonData("restart XRAY", "restart"),
         tgbotapi.NewInlineKeyboardButtonData("github", "github"),
-		tgbotapi.NewInlineKeyboardButtonData("help", "help"),
+	tgbotapi.NewInlineKeyboardButtonData("help", "help"),
     ),
 )
 
@@ -333,7 +333,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 		📍 Github   : https://github.com/MrCenTury
 		📞 Telegram : @hcentury`
 		msg.ReplyMarkup = numericKeyboard
-		
+
 	case "usage":
 		msg.Text = j.getClientUsage(update.Message.CommandArguments())
 	
