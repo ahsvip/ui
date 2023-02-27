@@ -209,7 +209,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 						if err!= nil {
 							msg.Text = fmt.Sprintln("⚠ راه اندازی مجدد سرویس XRAY ناموفق بود")
 						} else {
-							msg.Text = fmt.Sprintln"✅ سرویس XRAY با موفقیت راه اندازی مجدد شد"
+							msg.Text = "✅ سرویس XRAY با موفقیت راه اندازی مجدد شد"
 						}
 						msg.ReplyMarkup = menuKeyboard
 					case "get_stop":
@@ -217,7 +217,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 						if err!= nil {
 							msg.Text = fmt.Sprintln("⚠ متوقف کردن سرویس XRAY ناموفق بود")
 						} else {
-							msg.Text = fmt.Sprintln"✅ سرویس XRAY با موفقیت متوقف شد"
+							msg.Text = "✅ سرویس XRAY با موفقیت متوقف شد"
 						}
 						msg.ReplyMarkup = menuKeyboard
 					case "get_status":
