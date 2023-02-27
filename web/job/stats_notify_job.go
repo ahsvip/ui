@@ -166,8 +166,6 @@ var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 	tgbotapi.NewInlineKeyboardRow(
 		tgbotapi.NewInlineKeyboardButtonData("وضعیت سیستم", "get_status"),
 		tgbotapi.NewInlineKeyboardButtonURL("github", "get_github"),), 
-	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("به زودی ...", "coming_soon"),),
 )
 
 func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
@@ -205,12 +203,13 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 					case "get_usage":
 						msg.Text = "برای استفاده شما دستوری مانند این ارسال کنید : \n <code>/usage uuid | id</code> \n مثال : <code>/usage fc3239ed-8f3b-4151-ff51-b183d5182142</code>"
 						msg.ParseMode = "HTML"
+					msg.ReplyMarkup = menuKeyboard
 					case "get_restart":
 						err := j.xrayService.RestartXray(true)
 						if err!= nil {
 							msg.Text = fmt.Sprintln("⚠ راه اندازی مجدد سرویس XRAY ناموفق بود")
 						} else {
-							msg.Text = "✅ سرویس XRAY با موفقیت راه اندازی مجدد شد"
+							msg.Text = fmt.Sprintln"✅ سرویس XRAY با موفقیت راه اندازی مجدد شد"
 						}
 						msg.ReplyMarkup = menuKeyboard
 					case "get_stop":
@@ -218,7 +217,7 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
 						if err!= nil {
 							msg.Text = fmt.Sprintln("⚠ متوقف کردن سرویس XRAY ناموفق بود")
 						} else {
-							msg.Text = "✅ سرویس XRAY با موفقیت متوقف شد"
+							msg.Text = fmt.Sprintln"✅ سرویس XRAY با موفقیت متوقف شد"
 						}
 						msg.ReplyMarkup = menuKeyboard
 					case "get_status":
@@ -250,35 +249,9 @@ func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
         // Extract the command from the Message.
         switch update.Message.Command() {
 	
-	case "restart":
-		err := j.xrayService.RestartXray(true)
-		if err!= nil {
-			msg.Text = fmt.Sprintln("⚠ راه اندازی مجدد سرویس XRAY ناموفق بود")
-		} else {
-			msg.Text = "✅ سرویس XRAY با موفقیت راه اندازی مجدد شد"
-		}
-		msg.ReplyMarkup = menuKeyboard
-		
-	case "stop":
-		err := j.xrayService.StopXray()
-		if err!= nil {
-			msg.Text = fmt.Sprintln("⚠ متوقف کردن سرویس XRAY ناموفق بود")
-		} else {
-			msg.Text = "✅ سرویس XRAY با موفقیت متوقف شد"
-		}
-		msg.ReplyMarkup = menuKeyboard
-	
 	case "help":
 		msg.Text = "از دکمه های زیر استفاده کنید"
 		msg.ReplyMarkup = numericKeyboard
-
-	case "github":
-		msg.Text = `💻 لینک پروژه: https://github.com/MrCenTury/xXx-UI/`
-		msg.ReplyMarkup = menuKeyboard
-
-	case "status":
-		msg.Text = j.GetsystemStatus()
-		msg.ReplyMarkup = menuKeyboard
 
 	case "start":
 		msg.Text = `
