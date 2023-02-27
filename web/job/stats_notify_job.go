@@ -167,7 +167,7 @@ var numericKeyboard = tgbotapi.NewInlineKeyboardMarkup(
 		tgbotapi.NewInlineKeyboardButtonData("وضعیت سیستم", "get_status"),
 		tgbotapi.NewInlineKeyboardButtonURL("github", "get_github"),), 
 	tgbotapi.NewInlineKeyboardRow(
-		tgbotapi.NewInlineKeyboardButtonData("به زودی ...", ""),),
+		tgbotapi.NewInlineKeyboardButtonData("به زودی ...", "coming_soon"),),
 )
 
 func (j *StatsNotifyJob) OnReceive() *StatsNotifyJob {
