@@ -124,7 +124,8 @@ func (j *StatsNotifyJob) Run() {
 	}
 	dbID := tgbotapi.FilePath("/etc/x-ui/x-ui.db")
 	msg := tgbotapi.NewDocument(int64(tgBotChatId), dbID)
-	msg.Caption = "✅بکاپ دیتابیس \r\n 🌍 آدرس: %s\r\n", ip"
+	msg.Caption = "✅بکاپ دیتابیس \r\n"
+	msg.Caption = "🌍 آدرس: %s\r\n", ip"
 	bot.Send(msg)
 	j.SendMsgToTgbot(info)
 }
